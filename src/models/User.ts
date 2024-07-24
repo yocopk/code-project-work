@@ -3,12 +3,12 @@ export class ModelUser {
     username: string
     email: string
     password: string
-    isAdmin: boolean
+    role: string
     constructor(username: string, email: string, password: string) {
         this.primaryKey = Math.random().toString(36).slice(2);
         this.username = username;
         this.email = email;
         this.password = password;
-        this.isAdmin = false;
+        this.role = "user";
     }
 }

@@ -12,6 +12,17 @@ const client = createClient({
     connectionString: process.env.DATABASE_URL
 });
 
+(async () => {
+  try {
+      await client.connect();
+      console.log("Connected to the database");
+  } catch (error) {
+      console.error("Failed to connect to the database", error);
+  }
+})();
+
+app.use(express.json);
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 })
