@@ -3,9 +3,6 @@ import express, { Request, Response } from "express";
 import { createServer } from "http";
 import { config } from "dotenv";
 import { createClient } from "@vercel/postgres";
-import { ControllerProduct } from "./controllers/Product";
-
-import Pool from "./db";
 
 // #endregion
 
