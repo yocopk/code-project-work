@@ -1,8 +1,7 @@
 import { ModelUser } from "../models/User";
-
 import bcrypt from 'bcrypt';
-import pool from "../db";
-
+import pool from "../middlewares/db";
+import { authenticate, errorHandler, generateToken, authorizeRole } from "../middlewares/auth";
 export class ControllerUsers {
     private saltRounds = 10;
 
@@ -75,7 +74,8 @@ export class ControllerUsers {
                 const user = result.rows[0];
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
-                    return new ModelUser(user.username, user.email, '');  // Non restituiamo la password
+                    const token = generateToken(user);
+                    return new ModelUser(user.username, user.email, token);  // Non restituiamo la password
                 }
             }
             return null;
@@ -87,9 +87,8 @@ export class ControllerUsers {
         }
     }
 
-    // Il metodo logout potrebbe gestire la revoca di token se stai usando un sistema di autenticazione basato su token
     async logout(token: string): Promise<boolean> {
-        // Implementazione dipende dal tuo sistema di gestione delle sessioni/token
-        return true;
+        // implementazione logout jwt
+        return true
     }
 }

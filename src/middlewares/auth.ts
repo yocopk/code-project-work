@@ -1,8 +1,6 @@
-import jwt, { Secret } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import { ControllerUsers } from "./controllers/Users";
-let controllerUsers = new ControllerUsers();
 const secretKey = process.env.JWT_SECRET;
 
 dotenv.config();
@@ -28,7 +26,7 @@ const errorHandler = (
   res.status(500).send("Something broke!");
 };
 
-export const generateToken = (user: {
+const generateToken = (user: {
   id: string;
   username: string;
   role: string;
@@ -55,4 +53,4 @@ const authorizeRole = (role: string) => {
     }
   };
 };
-export { authenticate, errorHandler, authorizeRole };
+export { authenticate, errorHandler, generateToken, authorizeRole };

@@ -4,9 +4,9 @@ import { createServer } from "http";
 import { config } from "dotenv";
 import { createClient } from "@vercel/postgres";
 import { ControllerProduct } from "./controllers/Product";
-import { authenticate, errorHandler, authorizeRole } from "./auth";
+import { authenticate, errorHandler, authorizeRole } from "./middlewares/auth";
 
-import pool from "./db";
+import pool from "./middlewares/db";
 import { verify } from "jsonwebtoken";
 
 // #endregion
