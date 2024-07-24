@@ -1,9 +1,6 @@
 import { ModelOrder } from "../models/Order";
 
 export class ControllerOrders {
-  orders: ModelOrder[] = [];
-  referenceKeyCart: Array<ModelCart> = [];
-  saveOrderChanges;
 
   getOrders(referenceKeyCart: string) {
     const ordersFound = this.referenceKeyCart.find(function (orders) {
