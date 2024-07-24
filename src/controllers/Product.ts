@@ -3,14 +3,6 @@ import { ModelProduct } from "../models/Product";
 import pool from "../db";
 
 export class ControllerProduct {
-  private checkAdminRights(isAdmin: boolean): boolean {
-    if (!isAdmin) {
-      console.log("Access denied: Admin rights required.");
-      return false;
-    }
-    return true;
-  }
-
   async createProduct(req: Request, res: Response) {
     const { name, description, price, createdAt } = req.body;
     if (!name || !description || !price || !createdAt) {

@@ -3,7 +3,6 @@ import express, { Request, Response } from "express";
 import { createServer } from "http";
 import { config } from "dotenv";
 import { createClient } from "@vercel/postgres";
-import pool from "./db";
 
 // #endregion
 
@@ -19,7 +18,7 @@ const client = createClient({
   connectionString: process.env.DATABASE_URL,
 });
 client.connect();
-// #endregion
+
 (async () => {
   try {
     await client.connect();
@@ -29,60 +28,33 @@ client.connect();
   }
 })();
 
-app.use(express.json);
+// #endregion
+
+const controllerProduct = new ControllerProduct();
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
-app.post("/api/products", (req: Request, res: Response) => {
-  const { name, description, price, createdAt } = req.body;
-  client.query(
-    `INSERT INTO products (name, description, price, created_at) VALUES ($1, $2, $3, $4)`,
-    [name, description, price, createdAt],
-    (error, response) => {
-      if (error) res.status(500).send({ error });
-      else res.status(201).send({ product: "succesfully created" });
-    }
-  );
-});
+app.post("/api/products", (req, res) =>
+  controllerProduct.createProduct(req, res)
+);
 
-app.get("/api/products", function (req: Request, res: Response) {
-  client.query("SELECT * FROM products", function (error, response) {
-    if (error) res.status(400).json({ error });
-    else res.status(200).json(response.rows);
-  });
-});
+app.get("/api/products", (req, res) =>
+  controllerProduct.readProducts(req, res)
+);
 
-app.get("/api/products/:idProduct", function (req: Request, res: Response) {
-  client.query(
-    "SELECT * FROM products WHERE id = $1",
-    [req.params.idProduct],
-    function (error, response) {
-      if (error) res.status(400).json({ error });
-    }
-  );
-});
+app.get("/api/products/:idProduct", (req, res) =>
+  controllerProduct.readProductsById(req, res)
+);
 
-app.put("/api/products/:idProduct", function (req: Request, res: Response) {
-  client.query(
-    "UPDATE products SET name = $1, description = $2, price = $3 WHERE id = $4",
-    [req.body.name, req.body.description, req.body.price, req.params.idProduct],
-    function (error, response) {
-      if (error) res.status(400).json({ error });
-    }
-  );
-});
+app.put("/api/products/:idProduct", (req, res) =>
+  controllerProduct.updateProduct(req, res)
+);
 
-app.delete("/api/products/:idProduct", function (req: Request, res: Response) {
-  client.query(
-    "DELETE FROM products WHERE id = $1",
-    [req.params.idProduct],
-    function (error, response) {
-      if (error) res.status(400).json({ error });
-    }
-  );
-});
+app.delete("/api/products/:idProduct", (req, res) =>
+  controllerProduct.deleteProduct(req, res)
+);
 
 app.get("/api/cart", function (req: Request, res: Response) {
   client.query("SELECT * FROM carts", function (error, response) {
@@ -131,4 +103,4 @@ server.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
 
-export default pool;
+export default Pool;
