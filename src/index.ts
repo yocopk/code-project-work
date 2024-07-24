@@ -1,10 +1,13 @@
+// #region //imports
 import express, { Request, Response } from "express";
-
 import { createServer } from "http";
 import { config } from "dotenv";
-
 import { createClient } from "@vercel/postgres";
+import { Pool } from "./db";
 
+// #endregion
+
+// #region //config
 config();
 
 const app = express();
@@ -16,7 +19,7 @@ const client = createClient({
   connectionString: process.env.DATABASE_URL,
 });
 client.connect();
-
+// #endregion
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
@@ -73,3 +76,5 @@ app.delete("/api/products/:idProduct", function (req: Request, res: Response) {
 server.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
+
+export default pool;

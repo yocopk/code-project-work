@@ -1,8 +1,8 @@
+import { Request, Response } from "express";
 import { ModelProduct } from "../models/Product";
+import pool from "../db";
 
 export class ControllerProduct {
-  products: ModelProduct[] = [];
-
   private checkAdminRights(isAdmin: boolean): boolean {
     if (!isAdmin) {
       console.log("Access denied: Admin rights required.");
@@ -11,94 +11,76 @@ export class ControllerProduct {
     return true;
   }
 
-  createProduct(
-    name: ModelProduct["name"],
-    description: ModelProduct["description"],
-    price: ModelProduct["price"],
-    createdAt: ModelProduct["createdAt"],
-    isAdmin: boolean
-  ) {
-    if (!this.checkAdminRights(isAdmin)) {
-      return;
-    }
+  async createProduct(req: Request, res: Response) {
+    const { name, description, price, createdAt } = req.body;
     if (!name || !description || !price || !createdAt) {
-      console.log("All fields are required!");
-    } else {
-      const newProduct = new ModelProduct(name, description, price, createdAt);
-      this.products = [...this.products, newProduct];
-      console.log("Product successfully created!");
+      return res.status(400).send("All fields are required!");
     }
-    return true;
+    try {
+      const query =
+        "INSERT INTO products (name, description, price, created_at) VALUES ($1, $2, $3, $4) RETURNING *";
+      const values = [name, description, price, createdAt];
+      const result = await pool.query(query, values);
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error executing query:", error);
+      res.status(500).send("Product not created!");
+    }
+  }
+  async readProducts(req: Request, res: Response) {
+    try {
+      const query = "SELECT * FROM products";
+      const result = await pool.query(query);
+      res.status(200).json(result.rows);
+    } catch (error) {
+      console.error("Error executing query:", error);
+      res.status(500).send("Product not found!");
+    }
   }
 
-  readProducts() {
-    return this.products;
+  async readProductsById(req: Request, res: Response) {
+    const idProduct = req.params.idProduct;
+    try {
+      const query = "SELECT * FROM products WHERE id = $1";
+      const values = [idProduct];
+      const result = await pool.query(query, values);
+      res.status(200).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error executing query:", error);
+      res.status(500).send("Product not found!");
+    }
+  }
+  async updateProduct(req: Request, res: Response) {
+    const idProduct = req.params.idProduct;
+    const { name, description, price, createdAt } = req.body;
+    if (!name || !description || !price || !createdAt) {
+      return res.status(400).send("All fields are required!");
+    }
+    try {
+      const query =
+        "UPDATE products SET name = $1, description = $2, price = $3, created_at = $4 WHERE id = $5 RETURNING *";
+      const values = [name, description, price, createdAt, idProduct];
+      const result = await pool.query(query, values);
+      res.status(200).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error executing query:", error);
+      res.status(500).send("Product not updated!");
+    }
   }
 
-  readProductsById(idProduct: ModelProduct["idProduct"]) {
-    return this.products.find((product) => product.idProduct === idProduct);
-  }
-
-  updateProduct(
-    idProduct: ModelProduct["idProduct"],
-    name: ModelProduct["name"],
-    description: ModelProduct["description"],
-    price: ModelProduct["price"],
-    createdAt: ModelProduct["createdAt"],
-    isAdmin: boolean
-  ) {
-    if (!this.checkAdminRights(isAdmin)) {
-      return "Access denied!";
+  async deleteProduct(req: Request, res: Response) {
+    const idProduct = req.params.idProduct;
+    if (!idProduct) {
+      return res.status(400).send("All fields are required!");
     }
-    const existingProduct = this.products.find(
-      (product) => product.idProduct === idProduct
-    );
-    if (!existingProduct) {
-      return "Product not found!";
+    try {
+      const query = "DELETE FROM products WHERE id = $1 RETURNING *";
+      const values = [idProduct];
+      const result = await pool.query(query, values);
+      res.status(200).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error executing query:", error);
+      res.status(500).send("Product not deleted!");
     }
-    const updatedProductArray = this.products.map((product) => {
-      if (product.idProduct === idProduct) {
-        const updatedProduct = { ...product };
-        if (name !== undefined) {
-          updatedProduct.name = name;
-        }
-        if (description !== undefined) {
-          updatedProduct.description = description;
-        }
-        if (price !== undefined) {
-          updatedProduct.price = price;
-        }
-        if (createdAt !== undefined) {
-          updatedProduct.createdAt = createdAt;
-        }
-        return updatedProduct;
-      }
-      return product;
-    });
-    this.products = updatedProductArray;
-    console.log("Product successfully updated!");
-
-    const updatedProduct = updatedProductArray.find(
-      (product) => product.idProduct === idProduct
-    );
-    return updatedProduct || "Product not found!";
-  }
-
-  deleteProduct(idProduct: ModelProduct["idProduct"], isAdmin: boolean) {
-    if (!this.checkAdminRights(isAdmin)) {
-      return "Access denied!";
-    }
-    const productFound = this.products.find(
-      (product) => product.idProduct === idProduct
-    );
-    if (!productFound) {
-      console.log("Product not found!");
-      return false;
-    }
-    this.products = this.products.filter(
-      (product) => product.idProduct !== idProduct
-    );
-    console.log("Product successfully deleted!");
-    return true;
   }
 }
