@@ -3,6 +3,11 @@ import express, { Request, Response } from "express";
 import { createServer } from "http";
 import { config } from "dotenv";
 import { createClient } from "@vercel/postgres";
+import { ControllerProduct } from "./controllers/Product";
+import { authenticate, errorHandler, authorizeRole } from "./auth";
+
+import pool from "./db";
+import { verify } from "jsonwebtoken";
 
 // #endregion
 
@@ -36,7 +41,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
-app.post("/api/products", (req, res) =>
+app.post("/api/products", authenticate, authorizeRole("admin"), (req, res) =>
   controllerProduct.createProduct(req, res)
 );
 
@@ -48,12 +53,18 @@ app.get("/api/products/:idProduct", (req, res) =>
   controllerProduct.readProductsById(req, res)
 );
 
-app.put("/api/products/:idProduct", (req, res) =>
-  controllerProduct.updateProduct(req, res)
+app.put(
+  "/api/products/:idProduct",
+  authenticate,
+  authorizeRole("admin"),
+  (req, res) => controllerProduct.updateProduct(req, res)
 );
 
-app.delete("/api/products/:idProduct", (req, res) =>
-  controllerProduct.deleteProduct(req, res)
+app.delete(
+  "/api/products/:idProduct",
+  authenticate,
+  authorizeRole("admin"),
+  (req, res) => controllerProduct.deleteProduct(req, res)
 );
 
 app.get("/api/cart", function (req: Request, res: Response) {
@@ -103,4 +114,4 @@ server.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
 
-export default Pool;
+export default pool;
