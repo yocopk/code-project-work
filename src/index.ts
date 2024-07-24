@@ -20,6 +20,17 @@ const client = createClient({
 });
 client.connect();
 // #endregion
+(async () => {
+  try {
+    await client.connect();
+    console.log("Connected to the database");
+  } catch (error) {
+    console.error("Failed to connect to the database", error);
+  }
+})();
+
+app.use(express.json);
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
@@ -71,6 +82,49 @@ app.delete("/api/products/:idProduct", function (req: Request, res: Response) {
       if (error) res.status(400).json({ error });
     }
   );
+});
+
+app.get("/api/cart", function (req: Request, res: Response) {
+  client.query("SELECT * FROM carts", function (error, response) {
+    if (error) res.status(400).json({ error });
+    else res.status(200).json(response.rows);
+  });
+});
+
+app.post("/api/cart/add/:id", function (req: Request, res: Response) {
+  const idProduct = req.params.id;
+  const idUser = req.body.idUser;
+  client.query(
+    "INSERT INTO carts (user, product) VALUES ($1, $2)",
+    [idUser, idProduct],
+    function (error, response) {
+      if (error) {
+        res.status(400).json({ error });
+      } else {
+        res.status(201).json({ message: "Product added to cart successfully" });
+      }
+    }
+  );
+});
+
+app.delete("/api/cart/remove/:idCart", function (req: Request, res: Response) {
+  client.query(
+    "DELETE FROM carts WHERE id = $1",
+    [req.params.idCart],
+    function (error, response) {
+      if (error) res.status(400).json({ error });
+    }
+  );
+});
+
+app.delete("/api/cart/clear", function (req: Request, res: Response) {
+  client.query("DELETE * FROM carts", function (error, response) {
+    if (error) {
+      res.status(400).json({ error });
+    } else {
+      res.status(200).json({ message: "Cart emptied successfully" });
+    }
+  });
 });
 
 server.listen(port, () => {
