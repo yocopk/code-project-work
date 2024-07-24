@@ -27,11 +27,13 @@
 - POST /api/products: Permette agli utenti Admin di aggiungere un nuovo prodotto al catalogo.
 - PUT /api/products/:id: Consente agli utenti Admin di modificare le informazioni di un prodotto esistente.
 - DELETE /api/products/:id: Permette agli utenti Admin di eliminare un prodotto dal catalogo.
+
 - API per la gestione del carrello:
 - GET /api/cart: Restituisce il contenuto attuale del carrello dell'utente.
 - POST /api/cart/add/:id: Aggiunge un prodotto al carrello dell'utente.
 - DELETE /api/cart/remove/:id: Rimuove un prodotto dal carrello dell'utente.
 - DELETE /api/cart/clear: Svuota il carrello dell'utente.
+
 - API degli Ordini:
 - GET /api/orders: Restituisce lo storico degli ordini dell'utente.
 - Opzionale: implementare un sistema di paginazione per migliorare le performance dell’API

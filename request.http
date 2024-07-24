@@ -1,0 +1,41 @@
+###CREATE PRODUCTS 
+
+POST http://localhost:3000/api/products
+Content-Type: application/json
+Authorization: 
+
+{
+    "name": "Product 1",
+    "description": "Description 1",
+    "price": 100,
+    "createdAt": "2022-01-01T00:00:00.000Z"
+}
+
+
+### READ PRODUCTS 
+GET http://localhost:3000/api/products
+
+
+### READ PRODUCTS BY ID
+
+GET http://localhost:3000/api/products/:id
+
+
+
+### UPDATE PRODUCTS 
+
+PUT http://localhost:3000/api/products/:id
+Content-Type: application/json
+Authorization: 
+
+{ 
+    "name": "Product 1",
+    "description": "Description 1",
+    "price": 200
+}
+
+### DELETE PRODUCTS 
+
+DELETE http://localhost:3000/api/products/:id
+Content-Type: application/json
+Authorization: 
