@@ -1,5 +1,5 @@
 export class ModelProduct {
-  idProduct: string;
+  primaryKey: string;
   name: string;
   description: string;
   price: number;
@@ -11,7 +11,7 @@ export class ModelProduct {
     price: number,
     createdAt: Date
   ) {
-    this.idProduct = Math.random().toString(16).slice(2);
+    this.primaryKey = Math.random().toString(16).slice(2);
     this.name = name;
     this.description = description;
     this.price = price;
