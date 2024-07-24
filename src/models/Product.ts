@@ -16,5 +16,16 @@ export class ModelProduct {
     this.description = description;
     this.price = price;
     this.createdAt = createdAt;
+
+    this.validate();
+  }
+
+  private validate() {
+    if (this.name.length === 0) {
+      throw new Error("Name cannot be empty");
+    }
+    if (this.price < 0) {
+      throw new Error("Price cannot be negative");
+    }
   }
 }
