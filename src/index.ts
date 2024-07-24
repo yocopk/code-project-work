@@ -1,21 +1,86 @@
-import express, { Request, Response } from 'express';
-import { createClient } from '@vercel/postgres';
-import { createServer } from 'http';
-import { config } from 'dotenv';
+import express, { Request, Response } from "express";
+
+import { createServer } from "http";
+import { config } from "dotenv";
+
+import { createClient } from "@vercel/postgres";
 
 config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
+const port = process.env.port || 3000;
 const server = createServer(app);
+
 const client = createClient({
-    connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 });
+client.connect();
+
+(async () => {
+  try {
+      await client.connect();
+      console.log("Connected to the database");
+  } catch (error) {
+      console.error("Failed to connect to the database", error);
+  }
+})();
+
+app.use(express.json);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
-})
+});
 
-server.listen(PORT, () => {
-    console.log(`Server started at http://localhost:${PORT}`);
+app.post("/api/products", (req: Request, res: Response) => {
+  const { name, description, price, createdAt } = req.body;
+  client.query(
+    `INSERT INTO products (name, description, price, created_at) VALUES ($1, $2, $3, $4)`,
+    [name, description, price, createdAt],
+    (error, response) => {
+      if (error) res.status(500).send({ error });
+      else res.status(201).send({ product: "succesfully created" });
+    }
+  );
+});
+
+app.get("/api/products", function (req: Request, res: Response) {
+  client.query("SELECT * FROM products", function (error, response) {
+    if (error) res.status(400).json({ error });
+    else res.status(200).json(response.rows);
+  });
+});
+
+app.get("/api/products/:idProduct", function (req: Request, res: Response) {
+  client.query(
+    "SELECT * FROM products WHERE id = $1",
+    [req.params.idProduct],
+    function (error, response) {
+      if (error) res.status(400).json({ error });
+    }
+  );
+});
+
+app.put("/api/products/:idProduct", function (req: Request, res: Response) {
+  client.query(
+    "UPDATE products SET name = $1, description = $2, price = $3 WHERE id = $4",
+    [req.body.name, req.body.description, req.body.price, req.params.idProduct],
+    function (error, response) {
+      if (error) res.status(400).json({ error });
+    }
+  );
+});
+
+app.delete("/api/products/:idProduct", function (req: Request, res: Response) {
+  client.query(
+    "DELETE FROM products WHERE id = $1",
+    [req.params.idProduct],
+    function (error, response) {
+      if (error) res.status(400).json({ error });
+    }
+  );
+});
+
+server.listen(port, () => {
+  console.log(`Server started at http://localhost:${port}`);
 });
