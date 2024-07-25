@@ -19,13 +19,14 @@ export class ControllerUsers {
     if (!secretKey) {
       throw new Error("JWT_SECRET is not defined");
     }
-    jwt.sign(
+    const result = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       secretKey,
       {
         expiresIn: "1h",
       }
     );
+    return result;
   };
 
     async register(email: string, password: string): Promise<boolean> {
@@ -97,7 +98,7 @@ export class ControllerUsers {
                 const user = result.rows[0];
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
-                    const token = generateToken(user);
+                    const token = this.generateToken(user);
                     return new ModelUser(user.username, user.email, token);  // Non restituiamo la password
                 }
             }
