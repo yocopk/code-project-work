@@ -33,12 +33,13 @@ export class ControllerUsers {
     async register(req: Request, res: Response) {
         const client = await pool.connect();
         const { email, password } = req.body;
+        console.log(req.body)
         try {
             await client.query('BEGIN');
             
             const userCheck = await client.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userCheck.rows.length > 0) {
-                return res.status(400).send("Utente già registrato");
+                return res.status(400).send({ message: "Utente esistente" });
             }
 
             const hashedPassword = await bcrypt.hash(password, this.saltRounds);
@@ -50,10 +51,10 @@ export class ControllerUsers {
             );
 
             await client.query('COMMIT');
-            return res.status(200).send("Utente registrato con successo.");
+            return res.status(200).send({ message: "Utente registrato con successo" });
         } catch (e) {
             await client.query('ROLLBACK');
-            return res.status(400).send("Errore durante la registrazione.");
+            return res.status(400).send({ message: "Errore durante la registrazione." });
         } finally {
             client.release();
         }
