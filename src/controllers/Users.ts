@@ -1,6 +1,7 @@
+import { Request, Response } from "express";
 import { ModelUser } from "../models/User";
 import bcrypt from 'bcrypt';
-import pool from "../middlewares/db";
+import pool from "../config/db";
 import { authenticate, errorHandler, authorizeRole } from "../middlewares/auth";
 import dotenv from "dotenv"
 import jwt, { Secret } from "jsonwebtoken";
@@ -29,15 +30,15 @@ export class ControllerUsers {
     return result;
   };
 
-    async register(email: string, password: string): Promise<boolean> {
+    async register(req: Request, res: Response) {
         const client = await pool.connect();
+        const { email, password } = req.body;
         try {
             await client.query('BEGIN');
             
             const userCheck = await client.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userCheck.rows.length > 0) {
-                console.log('Utente già registrato.');
-                return false;
+                return res.status(400).send("Utente già registrato");
             }
 
             const hashedPassword = await bcrypt.hash(password, this.saltRounds);
@@ -49,25 +50,24 @@ export class ControllerUsers {
             );
 
             await client.query('COMMIT');
-            return true;
+            return res.status(200).send("Utente registrato con successo.");
         } catch (e) {
             await client.query('ROLLBACK');
-            console.error('Errore durante la registrazione:', e);
-            return false;
+            return res.status(400).send("Errore durante la registrazione.");
         } finally {
             client.release();
         }
     }
 
-    async registerAdmin(email: string, password: string): Promise<boolean> {
+    async registerAdmin(req: Request, res: Response) {
         const client = await pool.connect();
+        const { email, password } = req.body;
         try {
             await client.query('BEGIN');
             
             const adminCheck = await client.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, 'admin']);
             if (adminCheck.rows.length > 0) {
-                console.log('Admin già registrato.');
-                return false;
+                return res.status(400).send("Admin già registrato.");
             }
 
             const hashedPassword = await bcrypt.hash(password, this.saltRounds);
@@ -80,18 +80,18 @@ export class ControllerUsers {
             );
 
             await client.query('COMMIT');
-            return true;
+            return res.status(200).send("Admin registrato con successo.");
         } catch (e) {
             await client.query('ROLLBACK');
-            console.error('Errore durante la registrazione admin:', e);
-            return false;
+            return res.status(400).send("Errore durante la registrazione admin.");
         } finally {
             client.release();
         }
     }
 
-    async login(email: string, password: string): Promise<ModelUser | null> {
+    async login(req: Request, res: Response) {
         const client = await pool.connect();
+        const { email, password } = req.body;
         try {
             const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
             if (result.rows.length > 0) {
@@ -99,20 +99,19 @@ export class ControllerUsers {
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
                     const token = this.generateToken(user);
-                    return new ModelUser(user.username, user.email, token);  // Non restituiamo la password
+                    return res.status(200).send(new ModelUser(user.username, user.email, token));  // Non restituiamo la password
                 }
             }
             return null;
         } catch (e) {
-            console.error('Errore durante il login:', e);
-            return null;
+            return res.status(400).send("Errore durante il login.");
         } finally {
             client.release();
         }
     }
 
-    async logout(token: string): Promise<boolean> {
+    async logout(token: string, req: Request, res: Response) {
         // implementazione logout jwt
-        return true
+        return res.status(200).send("Logout effettuato con successo");
     }
 }
