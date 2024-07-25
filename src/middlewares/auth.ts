@@ -1,17 +1,23 @@
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-const secretKey = process.env.JWT_SECRET;
+const secretKey = process.env.JWT_SECRET as Secret;
 
 dotenv.config();
 
 // Middleware di autenticazione
-const authenticate = (req: Request, res: Response, next: NextFunction) => {
+const authenticate = async (req: Request, res: Response, next: NextFunction, secretKey: Secret) => {
   const token = req.headers["authorization"];
   if (!token) {
     return res.status(401).send("Unauthorized");
   }
-  // Logica per verificare il token
+  try { 
+    const result = await jwt.verify(token, secretKey)
+    req.body.user = result;
+  }
+  catch(e) {
+    return res.status(400).send("Invalid token")
+   }  // Logica per verificare il token
   next(); // Passa al prossimo middleware se il token è valido
 };
 
@@ -24,24 +30,9 @@ const errorHandler = (
 ) => {
   console.error(err.stack);
   res.status(500).send("Something broke!");
+  next()
 };
 
-const generateToken = (user: {
-  id: string;
-  username: string;
-  role: string;
-}) => {
-  if (!secretKey) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-  return jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
-    secretKey,
-    {
-      expiresIn: "1h",
-    }
-  );
-};
 
 const authorizeRole = (role: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -53,4 +44,4 @@ const authorizeRole = (role: string) => {
     }
   };
 };
-export { authenticate, errorHandler, generateToken, authorizeRole };
+export { authenticate, errorHandler, authorizeRole };
