@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ModelProduct } from "../models/Product";
-import pool from "../middlewares/db";
+import pool from "../config/db";
 
 export class ControllerProduct {
   async createProduct(req: Request, res: Response) {

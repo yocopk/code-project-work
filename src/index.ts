@@ -6,7 +6,7 @@ import { createClient } from "@vercel/postgres";
 import { ControllerProduct } from "./controllers/Product";
 import { authenticate, errorHandler, authorizeRole } from "./middlewares/auth";
 
-import pool from "./middlewares/db";
+import pool from "./config/db";
 import { verify } from "jsonwebtoken";
 
 // #endregion
