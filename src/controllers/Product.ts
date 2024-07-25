@@ -6,14 +6,14 @@ export class ControllerProduct {
 
   async createProduct(req: Request, res: Response) {
     const client = await  pool.connect();
-    const { name, description, price, createdAt } = req.body;
-    if (!name || !description || !price || !createdAt) {
+    const { name, description, price} = req.body;
+    if (!name || !description || !price) {
       return res.status(400).send("All fields are required!");
     }
     try {
       const query =
-        "INSERT INTO products (name, description, price, created_at) VALUES ($1, $2, $3, $4) RETURNING *";
-      const values = [name, description, price, createdAt];
+        "INSERT INTO products (name, description, price) VALUES ($1, $2, $3) RETURNING *";
+      const values = [name, description, price];
       const result = await client.query(query, values);
       res.status(201).json(result.rows[0]);
     } catch (error) {

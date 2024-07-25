@@ -19,7 +19,7 @@ const server = createServer(app);
 
 // #endregion
 
-app.use("/api/", userRoutes);
+app.use("/api", userRoutes);
 app.use("/api", productRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", ordersRoutes)
