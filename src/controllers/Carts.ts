@@ -1,55 +1,74 @@
 import { ModelCart } from "../models/Cart";
-import { Pool } from "pg";
+import pool from "../middlewares/db";
+import { Response, Request } from "express";
 
-export class CartController {
-  private pool: Pool;
+export class ControllerCart {
 
-  constructor() {
-    this.pool = new Pool({
-      // Configura qui i dettagli della connessione al tuo database
-      user: "username",
-      host: "localhost",
-      database: "database_name",
-      password: "password",
-      port: 5432,
-    });
+
+  async addProductToCart(req: Request, res: Response) {
+  const client = await pool.connect();
+  const { userId, productId } = req.body;
+
+  if (!userId || !productId) {
+    return res.status(400).json({ error: "Missing required parameters" });
+  }
+  try { 
+    const query = "INSERT INTO carts (user_id, product_id) VALUES ($1, $2) RETURNING *";
+    const result = await client.query(query, [userId, productId]);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add product to cart" });
+  }
+  finally { 
+    client.release();
+  }
+  }
+  
+  
+  async getCart(req: Request, res: Response ){
+    const client = await pool.connect();
+    const { userId } = req.params;
+    try {
+    const query = "SELECT * FROM carts WHERE user_id = $1";
+    const result = await client.query(query, [userId]);
+    res.status(200).json(result.rows); 
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get cart" });
+  } finally {
+    client.release();
   }
 
-  async getCartByUser(referenceKeyUser: string): Promise<ModelCart[]> {
-    const query = "SELECT * FROM carts WHERE reference_key_user = $1";
-    const result = await this.pool.query(query, [referenceKeyUser]);
-    return result.rows.map(
-      (row) => new ModelCart(row.reference_key_user, row.reference_key_product)
-    );
   }
 
-  async addProductToCart(
-    referenceKeyUser: string,
-    referenceKeyProduct: string
-  ): Promise<ModelCart> {
-    const query =
-      "INSERT INTO carts (user, product) VALUES ($1, $2) RETURNING *";
-    const result = await this.pool.query(query, [
-      referenceKeyUser,
-      referenceKeyProduct,
-    ]);
-    const newCart = new ModelCart(result.rows[0].user, result.rows[0].product);
-    newCart.primaryKey = result.rows[0].id;
-    return newCart;
+  async removeProductFromCart(req: Request, res: Response) {
+  const client = await pool.connect();
+  const { userId, productId } = req.body;
+  if (!userId || !productId) {
+    return res.status(400).json({ error: "Missing required parameters" });  
+  }
+  try {
+    const query = "DELETE FROM carts WHERE user_id = $1 AND product_id = $2";
+    const result = await client.query(query, [userId, productId]);
+    res.status(200).json({ message: "Product removed from cart successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to remove product from cart" });
+  } finally {
+    client.release();
+  }
   }
 
-  async removeProductFromCart(
-    referenceKeyUser: string,
-    primaryKey: number
-  ): Promise<boolean> {
-    const query = "DELETE FROM carts WHERE user = $1 AND id = $2";
-    const result = await this.pool.query(query, [referenceKeyUser, primaryKey]);
-    return result.rowCount != null && result.rowCount > 0;
-  }
-
-  async clearCartByUser(referenceKeyUser: string): Promise<boolean> {
-    const query = "DELETE FROM carts WHERE user = $1";
-    const result = await this.pool.query(query, [referenceKeyUser]);
-    return result.rowCount != null && result.rowCount > 0;
-  }
+  async clearCart(req: Request, res: Response) {
+const client = await pool.connect();
+const { userId } = req.body;
+if (!userId) {
+  return res.status(400).json({ error: "Missing required parameters" });
 }
+try {
+  const query = "DELETE * FROM carts WHERE user_id = $1";
+  const result = await client.query(query, [userId]);
+  res.status(200).json({ message: "Cart cleared successfully" });
+} catch (error) {
+  res.status(500).json({ error: "Failed to clear cart" });
+} finally {
+  client.release();
+    } } }
