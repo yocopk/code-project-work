@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ModelOrder } from "../models/Order";
-import pool from "../middlewares/db";
+import pool from "../config/db";
 
 export class ControllerOrders {
   async getOrders(req: Request, res: Response) {
