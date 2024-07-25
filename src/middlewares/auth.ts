@@ -6,7 +6,7 @@ const secretKey = process.env.JWT_SECRET as Secret;
 dotenv.config();
 
 // Middleware di autenticazione
-const authenticate = async (req: Request, res: Response, next: NextFunction, secretKey: Secret) => {
+const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers["authorization"];
   if (!token) {
     return res.status(401).send("Unauthorized");
