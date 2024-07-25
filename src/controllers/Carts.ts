@@ -1,5 +1,5 @@
 import { ModelCart } from "../models/Cart";
-import pool from "../middlewares/db";
+import pool from "../config/db";
 import { Response, Request } from "express";
 
 export class ControllerCart {
