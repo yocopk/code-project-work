@@ -1,9 +1,32 @@
 import { ModelUser } from "../models/User";
 import bcrypt from 'bcrypt';
 import pool from "../middlewares/db";
-import { authenticate, errorHandler, generateToken, authorizeRole } from "../middlewares/auth";
+import { authenticate, errorHandler, authorizeRole } from "../middlewares/auth";
+import dotenv from "dotenv"
+import jwt, { Secret } from "jsonwebtoken";
+const secretKey = process.env.JWT_SECRET;
+ 
 export class ControllerUsers {
     private saltRounds = 10;
+
+    
+ generateToken = (user: {
+    id: string;
+    username: string;
+    role: string;
+  }) => {
+
+    if (!secretKey) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+    jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      secretKey,
+      {
+        expiresIn: "1h",
+      }
+    );
+  };
 
     async register(email: string, password: string): Promise<boolean> {
         const client = await pool.connect();
