@@ -2,33 +2,12 @@ import { Request, Response } from "express";
 import { ModelUser } from "../models/User";
 import bcrypt from 'bcrypt';
 import pool from "../config/db";
-import { authenticate, errorHandler, authorizeRole } from "../middlewares/auth";
-import dotenv from "dotenv"
-import jwt, { Secret } from "jsonwebtoken";
-const secretKey = process.env.JWT_SECRET;
- 
+import { generateToken } from "../utils";
 export class ControllerUsers {
     private saltRounds = 10;
 
     
- generateToken = (user: {
-    id: string;
-    username: string;
-    role: string;
-  }) => {
-
-    if (!secretKey) {
-      throw new Error("JWT_SECRET is not defined");
-    }
-    const result = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
-      secretKey,
-      {
-        expiresIn: "1h",
-      }
-    );
-    return result;
-  };
+ 
 
     async register(req: Request, res: Response) {
         const client = await pool.connect();
@@ -42,7 +21,7 @@ export class ControllerUsers {
                 return res.status(400).send({ message: "Utente esistente" });
             }
 
-            const hashedPassword = await bcrypt.hash(password, this.saltRounds);
+            const hashedPassword = await bcrypt.hash(password, 10);
             const newUser = new ModelUser(email, email, hashedPassword);
 
             await client.query(
@@ -71,9 +50,10 @@ export class ControllerUsers {
                 return res.status(400).send("Admin già registrato.");
             }
 
-            const hashedPassword = await bcrypt.hash(password, this.saltRounds);
+            const hashedPassword = await bcrypt.hash(password, 10);
             const newAdmin = new ModelUser(email, email, hashedPassword);
             newAdmin.role = "admin";
+            console.log(newAdmin.role)
 
             await client.query(
                 'INSERT INTO users(id, username, email, password, role) VALUES($1, $2, $3, $4, $5)',
@@ -99,20 +79,22 @@ export class ControllerUsers {
                 const user = result.rows[0];
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
-                    const token = this.generateToken(user);
-                    return res.status(200).send(new ModelUser(user.username, user.email, token));  // Non restituiamo la password
+                    const token = generateToken(user);
+                    return res.status(200).send({user, token});  // Non restituiamo la password
                 }
             }
             return null;
         } catch (e) {
+            console.log(e)
             return res.status(400).send("Errore durante il login.");
         } finally {
             client.release();
         }
     }
 
-    async logout(token: string, req: Request, res: Response) {
+    async logout(req: Request, res: Response) {
         // implementazione logout jwt
-        return res.status(200).send("Logout effettuato con successo");
+        return res.status(200).send({message: "Logout effettuato con successo"});
     }
 }
+

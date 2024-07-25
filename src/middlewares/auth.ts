@@ -38,18 +38,20 @@ const errorHandler = (
 };
 
 
-const authorizeRole = (role: string) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+const authorizeRole = (req: Request, res: Response, next: NextFunction) => {
     const user = (req as any).user;
+    const token: string = req.headers["authorization"] || "";
+    const result: any = jwt.verify(token, secretKey);
+    console.log(result);
+    
     
     if (!secretKey) {
       throw new Error("JWT_SECRET is not defined");
     }
-    if (user && user.role === role) {
+    if (result && result.role === "admin") {
       next();
     } else {
       res.status(403).send("Unauthorized");
     }
-  };
 };
 export { authenticate, errorHandler, authorizeRole };
