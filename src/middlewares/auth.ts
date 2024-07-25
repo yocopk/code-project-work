@@ -6,13 +6,17 @@ const secretKey = process.env.JWT_SECRET as Secret;
 dotenv.config();
 
 // Middleware di autenticazione
-const authenticate = async (req: Request, res: Response, next: NextFunction, secretKey: Secret) => {
+const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers["authorization"];
   if (!token) {
     return res.status(401).send("Unauthorized");
   }
+  
+  if (!secretKey) {
+    throw new Error("JWT_SECRET is not defined");
+  }
   try { 
-    const result = await jwt.verify(token, secretKey)
+    const result =  jwt.verify(token, secretKey)
     req.body.user = result;
   }
   catch(e) {
@@ -37,6 +41,10 @@ const errorHandler = (
 const authorizeRole = (role: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = (req as any).user;
+    
+    if (!secretKey) {
+      throw new Error("JWT_SECRET is not defined");
+    }
     if (user && user.role === role) {
       next();
     } else {
