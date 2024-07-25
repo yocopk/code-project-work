@@ -1,3 +1,6 @@
+import { v4 as uuidv4 } from "uuid";
+
+
 export class ModelProduct {
   primaryKey: string;
   name: string;
@@ -11,7 +14,7 @@ export class ModelProduct {
     price: number,
     createdAt: Date
   ) {
-    this.primaryKey = Math.random().toString(16).slice(2);
+    this.primaryKey = uuidv4();
     this.name = name;
     this.description = description;
     this.price = price;
