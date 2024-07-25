@@ -5,6 +5,7 @@ import { config } from "dotenv";
 import { createClient } from "@vercel/postgres";
 import { ControllerProduct } from "./controllers/Product";
 import { authenticate, errorHandler, authorizeRole } from "./middlewares/auth";
+import { ControllerOrders } from "./controllers/Orders";
 
 import pool from "./middlewares/db";
 import { verify } from "jsonwebtoken";
@@ -109,6 +110,34 @@ app.delete("/api/cart/clear", function (req: Request, res: Response) {
     }
   });
 });
+
+const controllerOrders = new ControllerOrders();
+
+app.get("/api/orders", authenticate, (req, res) =>
+  controllerOrders.getOrders(req, res)
+);
+
+app.post("/api/orders", authenticate, authorizeRole("admin"), (req, res) =>
+  controllerOrders.createOrder(req, res)
+);
+
+app.get("/api/orders/:idOrder", authenticate, (req, res) =>
+  controllerOrders.getOrderById(req, res)
+);
+
+app.put(
+  "/api/orders/:idOrder",
+  authenticate,
+  authorizeRole("admin"),
+  (req, res) => controllerOrders.updateOrderStatus(req, res)
+);
+
+app.delete(
+  "/api/orders/:idOrder",
+  authenticate,
+  authorizeRole("admin"),
+  (req, res) => controllerOrders.deleteOrder(req, res)
+);
 
 server.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
