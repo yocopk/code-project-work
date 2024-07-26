@@ -4,93 +4,82 @@ import pool from "../config/db";
 
 export class ControllerOrders {
   async getOrders(req: Request, res: Response) {
+    const userId = req.params.userId; // Supponendo che l'ID dell'utente sia passato come parametro della richiesta
     const client = await pool.connect();
-    const reference = req.params.referenceKeyUser;
     try {
-      const query =
-        "SELECT * FROM orders WHERE referenceKeyUser = $referenceKeyUser";
-      const result = await client.query(query);
-      res.status(200).json(result.rows);
+        await client.query("BEGIN");
+        const result = await client.query("SELECT * FROM orders WHERE user_id = $1", [userId]);
+        await client.query("COMMIT");
+        res.status(200).json(result.rows); // Restituisce i risultati correttamente
     } catch (error) {
-      console.error("Error executing query:", error);
-      res.status(500).send("Product not found!");
+        await client.query("ROLLBACK");
+        console.error("Errore durante la richiesta degli ordini:", error);
+        res.status(500).json({ message: "Errore durante la richiesta degli ordini" });
+    } finally {
+        client.release();
     }
-  }
+}
+
 
   async createOrder(req: Request, res: Response) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-
       const {
         referenceKeyUser,
-        name,
-        surname,
-        address,
-        postalCode,
-        city,
-        region,
-        country,
-        cartItems,
+        referenceKeyCart
       } = req.body;
 
-      const insertOrderQuery = `INSERT INTO orders (referenceKeyUser, name, surname, address, postalCode, city, region, country, data_order)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
-        RETURNING order_id`;
-      const orderResult = await client.query(insertOrderQuery, [
-        referenceKeyUser,
-        name,
-        surname,
-        address,
-        postalCode,
-        city,
-        region,
-        country,
-      ]);
-      const orderId = orderResult.rows[0].order_id;
+      const newOrder = new ModelOrder(referenceKeyUser, referenceKeyCart);
 
-      for (const item of cartItems) {
-        const insertItemQuery = `INSERT INTO order_items (order_id, product_id, quantity, price)
-          VALUES ($1, $2, $3, $4)`;
-        await client.query(insertItemQuery, [
-          orderId,
-          item.productId,
-          item.quantity,
-          item.price,
-        ]);
-      }
+      const insertOrderQuery = `INSERT INTO orders (user_id, cart_id, status) VALUES ($1, $2, $3)`;
+      const orderResult = await client.query(insertOrderQuery, [
+        newOrder.referenceKeyUser,
+        newOrder.referenceKeyCart,
+        newOrder.status
+      ]);
 
       await client.query("COMMIT");
-
-      res.status(201).json({ message: "Ordine creato con successo", orderId });
+      res.status(200).json({
+        message: "Ordine creato con successo"
+      });
     } catch (error) {
       await client.query("ROLLBACK");
       console.error("Errore durante la creazione dell'ordine:", error);
-      res
-        .status(500)
-        .json({ error: "Errore durante la creazione dell'ordine" });
+      res.status(500).json({ message: "Errore durante la creazione dell'ordine" });
     } finally {
       client.release();
-    }
+    }  
   }
 
   async getOrderById(req: Request, res: Response) {
     const client = await pool.connect();
     try {
-      const orderId = req.params.orderId;
-      const query = `SELECT * FROM orders WHERE order_Id = $1`;
-      const result = await client.query(query, [orderId]);
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: "Ordine non trovato" });
-      }
-      res.status(200).json(result.rows[0]);
+        const orderId = req.params.orderId;
+
+        // Log del parametro passato
+        console.log("Order ID passato:", orderId);
+
+        const query = `SELECT * FROM orders WHERE id = $1`;
+        const result = await client.query(query, [orderId]);
+
+        // Log dei risultati della query
+        console.log("Risultati della query:", result.rows);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Ordine non trovato" });
+        }
+
+        res.status(200).json(result.rows[0]);
     } catch (error) {
-      console.error("Errore nell'esecuzione della query:", error);
-      res.status(500).json({ message: "Errore nel recupero dell'ordine" });
+        console.error("Errore nel recupero dell'ordine:", error);
+        res.status(500).json({ message: "Errore nel recupero dell'ordine" });
     } finally {
-      client.release();
+        client.release();
     }
-  }
+}
+
+
 
   async updateOrderStatus(req: Request, res: Response) {
     const client = await pool.connect();
@@ -98,9 +87,9 @@ export class ControllerOrders {
       const orderId = req.params.orderId;
       const { newStatus } = req.body;
 
-      const query = `UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING * `;
+      const query = `UPDATE orders SET status = $1 WHERE id = $2`;
       const result = await client.query(query, [newStatus, orderId]);
-      if (result.rows.length === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ message: "Ordine non trovato" });
       }
       await client.query("COMMIT");
@@ -127,7 +116,7 @@ export class ControllerOrders {
     try {
       const orderId = req.params.orderId;
       const deletedStatus = "cancellato";
-      const query = `UPDATE orders SET status = $1 WHERE order_id = $2 AND status != $1 RETURNING *`;
+      const query = `UPDATE orders SET status = $1 WHERE id = $2 AND status != $1 RETURNING *`;
       const result = await client.query(query, [deletedStatus, orderId]);
       if (result.rows.length === 0) {
         return res
