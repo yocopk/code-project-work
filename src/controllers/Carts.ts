@@ -1,4 +1,3 @@
-import { ModelCart } from "../models/Cart";
 import pool from "../config/db";
 import { Response, Request } from "express";
 
@@ -7,7 +6,8 @@ export class ControllerCart {
 
   async addProductToCart(req: Request, res: Response) {
   const client = await pool.connect();
-  const { userId, productId } = req.body;
+  const { productId } = req.params;
+  const { userId } = req.body;
 
   if (!userId || !productId) {
     return res.status(400).json({ error: "Missing required parameters" });
@@ -42,16 +42,16 @@ export class ControllerCart {
 
   async removeProductFromCart(req: Request, res: Response) {
   const client = await pool.connect();
-  const { userId, productId } = req.body;
-  if (!userId || !productId) {
+  const { productId } = req.params;
+  if (!productId) {
     return res.status(400).json({ error: "Missing required parameters" });  
   }
   try {
-    const query = "DELETE FROM carts WHERE user_id = $1 AND product_id = $2";
-    const result = await client.query(query, [userId, productId]);
-    res.status(200).json({ message: "Product removed from cart successfully" });
+    const query = "DELETE FROM carts WHERE product_id = $1";
+    const result = await client.query(query, [productId]);
+    res.status(200).json({ message: "Product removed from cart successfully", item: result.rows[0] });
   } catch (error) {
-    res.status(500).json({ error: "Failed to remove product from cart" });
+    res.status(500).json({ message: "Failed to remove product from cart", error });
   } finally {
     client.release();
   }

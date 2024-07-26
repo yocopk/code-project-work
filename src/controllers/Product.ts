@@ -60,14 +60,14 @@ export class ControllerProduct {
     const client = await pool.connect();
 
     const idProduct = req.params.idProduct;
-    const { name, description, price, createdAt } = req.body;
-    if (!name || !description || !price || !createdAt) {
+    const { name, description, price} = req.body;
+    if (!name || !description || !price) {
       return res.status(400).send("All fields are required!");
     }
     try {
       const query =
-        "UPDATE products SET name = $1, description = $2, price = $3, created_at = $4 WHERE id = $5 RETURNING *";
-      const values = [name, description, price, createdAt, idProduct];
+        "UPDATE products SET name = $1, description = $2, price = $3, WHERE id = $4 RETURNING *";
+      const values = [name, description, price, idProduct];
       const result = await client.query(query, values);
       res.status(200).json(result.rows[0]);
     } catch (error) {
@@ -90,7 +90,7 @@ export class ControllerProduct {
       const query = "DELETE FROM products WHERE id = $1 RETURNING *";
       const values = [idProduct];
       const result = await client.query(query, values);
-      res.status(200).json(result.rows[0]);
+      res.status(200).send({ message: "Product deleted successfully!", product: result.rows[0] });
     } catch (error) {
       console.error("Error executing query:", error);
       res.status(500).send("Product not deleted!");
