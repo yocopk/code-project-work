@@ -59,7 +59,7 @@ export class ControllerCart {
 
   async clearCart(req: Request, res: Response) {
 const client = await pool.connect();
-const { userId } = req.body;
+const { userId } = req.params;
 if (!userId) {
   return res.status(400).json({ error: "Missing required parameters" });
 }
