@@ -33,7 +33,7 @@ GET http://localhost:3000/api/products/:id
 
 ### UPDATE PRODUCTS 
 
-PUT http://localhost:3000/api/products/:id
+PUT http://localhost:3000/api/products/a02a9d63-aeb0-4645-98c2-174f4e607165
 Content-Type: application/json
 Authorization: 
 
@@ -45,6 +45,16 @@ Authorization:
 
 ### DELETE PRODUCTS 
 
-DELETE http://localhost:3000/api/products/:id
+DELETE http://localhost:3000/api/products/c8327cac-e0d9-44b3-9765-6b0338d3cc92
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzY0MzdkLTE1NDctNGNlOC04MzkxLTVmM2ZiYTI5MTk1NCIsInVzZXJuYW1lIjoiYWRtaW5AYWRtaW4uY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzIxOTgwNjIyLCJleHAiOjE3MjE5ODQyMjJ9.GgqhsnbDqTjHbno0FY6sDrxEuMEe5LueStKd6yoZxmM
+
+### CART ADD
+POST http://localhost:3000/api/cart/a02a9d63-aeb0-4645-98c2-174f4e607165
 Content-Type: application/json
-Authorization: 
+
+{
+    "userId": "14872a6e-d680-4cfb-86b0-3c40fde6a68e"
+}
+
+### GET CART
+GET http://localhost:3000/api/cart/14872a6e-d680-4cfb-86b0-3c40fde6a68e

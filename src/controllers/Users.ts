@@ -80,7 +80,12 @@ export class ControllerUsers {
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
                     const token = generateToken(user);
-                    return res.status(200).send({user, token});  // Non restituiamo la password
+                    const userResponse = {
+                        id: user.id,
+                        email: user.email,
+                        role: user.role
+                    }
+                    return res.status(200).send({userResponse, token});  // Non restituiamo la password
                 }
             }
             return null;
